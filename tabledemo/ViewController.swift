@@ -20,12 +20,14 @@ struct ServicesDataSource {
     var type: ServicesTableType
     var isOpen: Bool
     var category: String
+    var isCategory: Bool
 }
 
 class ViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
     private var dataSource: [ServicesDataSource] = []
+    private var expandedCellIndeces: [IndexPath] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,29 +35,50 @@ class ViewController: UIViewController {
     }
     
     private func createTestDataSource() {
-        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 1"))
-        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 2"))
-        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 3"))
+        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 1", isCategory: true))
+        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 2", isCategory: true))
+        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 3", isCategory: true))
+        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 4", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 5", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 6", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 7", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 8", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 9", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 10", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 11", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 12", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 13", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 14", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 15", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 16", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 17", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 18", isCategory: true))
+//        dataSource.append(ServicesDataSource(type: .header, isOpen: false, category: "Category 19", isCategory: true))
+        
         tableView.reloadData()
     }
     
     private func addCellTo(index: Int) {
         let serviceSource = dataSource[index]
-        let categoryServices = ServicesDataSource(type: .row, isOpen: true, category: serviceSource.category)
+        let categoryServices = ServicesDataSource(type: .row, isOpen: true, category: serviceSource.category, isCategory: false)
         dataSource.insert(categoryServices, at: index + 1)
         let indexPath = IndexPath(row: index + 1, section: 0)
+        tableView.insertRows(at: [indexPath], with: .bottom)
+        expandedCellIndeces.append(indexPath)
         tableView.beginUpdates()
-        tableView.insertRows(at: [indexPath], with: .top)
         tableView.endUpdates()
     }
     
     private func removeCellFrom(index: Int) {
-        tableView.beginUpdates()
         if index < dataSource.count - 1 && dataSource[index + 1].type == .row {
-            dataSource.remove(at: index + 1)
-            tableView.deleteRows(at: [IndexPath(row: index + 1, section: 0)], with: .top)
+            let indexPath = IndexPath(row: index + 1, section: 0)
+            tableView.performBatchUpdates {
+                expandedCellIndeces.removeAll(where: {$0 == indexPath})
+            } completion: { [weak self] _ in
+                self?.dataSource.remove(at: index + 1)
+                self?.tableView.deleteRows(at: [indexPath], with: .top)
+            }
         }
-        tableView.endUpdates()
     }
 }
 
@@ -85,23 +108,19 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return UITableView.automaticDimension
-    }
-    
-    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        return UITableView.automaticDimension
+        if dataSource[indexPath.row].isCategory {
+            return 50
+        }
+        
+        if expandedCellIndeces.contains(indexPath) {
+            return 300
+        } else {
+            return 0
+        }
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-    }
-    
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 0
-    }
-    
-    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return 0
     }
 }
 
